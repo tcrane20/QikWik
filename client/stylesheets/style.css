@@ -1,4 +1,17 @@
+h1.question {
+  position: relative;
+  top: 80px;
+  z-index: 100;
+}
+
+h1.answer {
+  position: relative;
+  top: 0px;
+  z-index: 100;
+}
+
 div.messages {
+  display: "inline";
   margin-top: 50px;
 }
 
@@ -11,19 +24,36 @@ div.time {
 }
 
 div.comments {
-
+  cursor: pointer;
 }
 
 div.tags {
 
 }
 
-input.btn {
+input.newQuestion {
   position: fixed;
   top: 4px;
   left: 47%;
 }
 
+input.submitQuestion {
+  
+}
+
+textarea.question {
+  position: relative;
+  top: 80px;
+}
+
+input.tagbox {
+  position: relative;
+
+}
+
+input.duration {
+  width: 80px;
+}
 /*
 body {
   background: #f9e933;

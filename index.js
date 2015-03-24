@@ -98,13 +98,6 @@ app.post("/update", function (req, res){
 	res.json(updatedPosts);
 });
 
-app.post("/answer", function(req,res){
-	var id = req.body.postid;
-	var comment = req.body.answer;
-
-	postings[id].comments.push(comment);
-})
-
 app.post("/add", function (req, res){
 	var newPosts = [];
 	var postIds = req.body['postids[]'];
@@ -136,5 +129,27 @@ app.post("/remove", function (req, res){
 	res.json(results);
 });
 
+app.post("/question", function(req,res){
+	var message = req.body.message;
+	var tags = req.body.tags.split(" "); // Put tags into array form
+	var ttl = JSON.parse(req.body.ttl);
+	console.log(req.body.ttl + " " + ttl);
+	// Add message to database                 get seconds
+	database.push(posting(new Date().getTime(), ttl * 60, message, tags, []));
+	res.json(0);
+});
+
+app.post("/answer", function(req,res){
+	var id = JSON.parse(req.body.id);
+	var message = req.body.message;
+
+	for (var i = 0; i < database.length; i++){
+		if (database[i].id === id){
+			database[i].comments.push(message);
+		}
+	}
+
+	res.json(0);
+});
 
 console.log("Server running on port 3000");

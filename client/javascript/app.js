@@ -1,3 +1,5 @@
+var blockNewMessages = false;
+
 var main = function () {
     "use strict";
 
@@ -66,8 +68,20 @@ var main = function () {
 						if (posts[i].comments.length !== element.comments.length){
 							// Update to new comments
 							posts[i].comments = element.comments;
-							// Redraw contents to show new comments total count
-							getComments(posts[index].message).innerHTML = element.comments.length + " Comments";
+							// If currently viewing the comments section for one question (and not the entire list of questions)
+							if (blockNewMessages){
+								$("div.comment-strings").empty();
+								// Draw the comments
+								for (var j = 0; j < element.comments.length; j++){
+									var $comment = $("<div class='comment-msg'>").text("Answer # " + (j+1) + ": " + element.comments[j]);
+									$("div.comment-strings").append($comment);
+								}
+							}
+							else{
+								
+								// Redraw contents to show new comments total count
+								getComments(posts[index].message).innerHTML = element.comments.length + " Comments";
+							}
 						}
 						break;
 					}
@@ -95,14 +109,66 @@ var main = function () {
 				var $ttl = $("<div>").text(msToClock(element.ttl)).addClass("time");
 				// Indicate number of comments made to the question
 				var $comments = $("<div>").text(element.comments.length + " Comments").addClass("comments");
+				
 				// Combines all the elements together to form a single element
 				$post.append($tags, $ttl, $comments);
 				// Adds the message to the queue
 				$("div.messages").append($post);
 				// Adds this message to the list
 				posts.push({'id': element.id, 'message': $post, 'comments': element.comments});
+				// Allow clicking on the comments element
+				$comments.on("click", function(){
+					var msgID = JSON.parse($(this).parent().attr("id"));
+					var comments;
+					var index = 0;
+					var post;
+					// Find the message that is associated with this comment element
+					for (index; index < posts.length; index++){
+						if (posts[index].id === msgID){
+							comments = posts[index].comments;
+							break;
+						}
+					}
+					// Go to new page with just this message
+					blockNewMessages = true;
+					post = posts[index];
+					
+					// Clear out message queue and only show the one message we are interested in
+					$("div.messages").empty();
+					$("div.messages").append(post.message);
+					// Also, create a new div that will hold all the comment messages and text field for submitting answers
+					$("div.messages").append($("<div class='comment-strings'>"));
+					$("div.messages").append($("<div class='answer-field'>"));
+					// Hide the div.comments as we don't need it right now
+					$("div.comments").css({display: "none"});
+					// Draw the comments
+					for (index = 0; index < post.comments.length; index++){
+						var $comment = $("<div class='comment-msg'>").text("Answer # " + (index+1) + ": " + post.comments[index]);
+						$("div.comment-strings").append($comment);
+					}
+					// Create text area to allow user to reply back
+					var $textarea = $("<textarea rows='5' cols='100' class='answer'>");
+					// Button for submitting answer to the server as well as its onClick action
+					var $submitAnswerBtn = $("<input class='btn btn-success submitAnswer' type='submit' value='Post Answer'>");
+					$submitAnswerBtn.on("click", function(){
+						// If textarea does not have enough characters
+						if ($("textarea.answer").val().length <= 12){
+							alert("Please input more than 12 characters for an answer.");
+							return;
+						}
+						// Submit answer to server. Upon success, clears out text field
+						$.post("/answer", {'id': msgID, 'message': $("textarea.answer").val()}, function(res){
+							$("textarea.answer").val('');
+						});
+					});
+					// Append DOM elements for the textarea and submit button
+					$("div.answer-field").append("<h1 class='answer'>Reply to Question</h1>", $textarea, "<br><br>", $submitAnswerBtn);
 
-				console.log({'id': element.id, 'message': $post, 'comments': element.comments});
+					// Temporarily change the button to a Back button
+					$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
+				});
+
+				//console.log({'id': element.id, 'message': $post, 'comments': element.comments});
 			});
 		});
 	}
@@ -129,11 +195,65 @@ var main = function () {
 		//remove old items
 		removePosts();
 		//add new items
-		addPosts();
+		if (!blockNewMessages) addPosts();
 		//readjust scrollbar
 	}
 	//
 	setInterval(updateClient, 100);
+
+
+	$("input.newQuestion").on("click", function(){
+		// User is already on the question form; do nothing
+		if ($("input.newQuestion").hasClass('btn-primary'))
+		{
+			// Still need to add clearing method
+			return;
+		}
+		// Hides the messages
+		$("div.messages").css({display: "none"});
+		// Create DOM elements (textarea, text input, submit button)
+		var $textarea = $("<textarea rows='5' cols='100' class='question'>");
+		var $tagbox = $("<input class='tagbox' type='text'>");
+		var $numInput = $("<input class='duration' type='number' min='5' max='720' value='5'>");
+
+		// Button for submitting question to the server as well as its onClick action
+		var $submitQuestionBtn = $("<input class='btn btn-success submitQuestion' type='submit' value='Post Question'>");
+
+		$submitQuestionBtn.on("click", function(){
+			// If textarea does not have enough characters
+			if ($("textarea.question").val().length <= 12){
+				alert("Please input more than 12 characters for a question.");
+				return;
+			}
+			// If tag box is empty
+			if ($("input.tagbox").val().length === 0){
+				alert("Please include at least one tag.");
+				return;
+			}
+			// If duration is too long or short
+			if ($("input.duration").val() < 5 || $("input.duration").val() > 720){
+				alert("Messages may only have a duration between 5 and 720 minutes.")
+				return;
+			}
+
+			// Submit question to server. Upon success, removes question form and returns to posted messages
+			$.post("/question", {'message': $("textarea.question").val(), 'tags': $("input.tagbox").val(), 'ttl': $("input.duration").val()}, function(res){
+				// Clear out the DIV form
+				$("div.newQuestionForm").empty();
+				// Return to the list of messages
+				$("div.messages").css({display: "block"});
+			});
+		});
+
+		// Append DOMs
+		$("div.newQuestionForm").append("<h1 class='question'>Ask a Question</h1>", $textarea);
+		$("div.newQuestionForm").append("<br><br><br><br><br><br>Tags: ", $tagbox);
+		$("div.newQuestionForm").append("<br><br>Minutes to Live: ", $numInput);
+		$("div.newQuestionForm").append("<br><br>", $submitQuestionBtn)
+
+		// Temporarily change the button to a Back button
+		$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
+	});
 
 };
 
