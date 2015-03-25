@@ -9,16 +9,15 @@ h1.answer {
   top: 0px;
   z-index: 100;
 }
-/*
+
 div.messages {
-  display: "inline";
-  margin-top: 50px;
+  
 }
 
 div.post {
-  font-size: 20px;
+  
 }
-*/
+
 div.time {
   font-size: 50px;
 }
@@ -32,11 +31,8 @@ div.tags {
 
 }
 
-/*input.newQuestion {
-  position: fixed;
-  top: 4px;
-  left: 47%;
-}*/
+input.newQuestion {
+}
 
 input.submitQuestion {
   
@@ -105,7 +101,7 @@ body{
 }
 
 #main{
-  height:1000px; 
+  height:60%; 
   width:800px; 
   overflow:auto;
   position:absolute;
@@ -114,7 +110,6 @@ body{
   clear: both;
   margin-left: -415px;
   z-index: 90;
-  margin-bottom: 100px;
   background: #fff;
   background-image: url(images/texture4.png);
   background-repeat:repeat-x repeat-y;
