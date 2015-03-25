@@ -1,15 +1,19 @@
+// Initial setup for server
 var http = require('http'),
-    express = require('express'),
-    bodyParser = require('body-parser'),
-    app = express(),
-    updateSpeed = 100;
+	express = require('express'),
+	bodyParser = require('body-parser'),
+	app = express(),
+	updateSpeed = 100; // Calls the main update function this many milliseconds
+
 // Loads index.html inside /client folder
 app.use(express.static(__dirname + "/client"));
 // Get body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 // Start the server
-http.createServer(app).listen(3000);
+http.createServer(app).listen(3000, function(){
+	console.log("Server running on port 3000");
+});
 
 var temp_id = 0;
 
@@ -21,7 +25,7 @@ function posting(id, ttl, question, tags, comments){
 		temp_id++;
 	}
 	return {"id": id, "ttl": ttl * 1000, "question": question, "tags": tags, "comments": comments};
-};
+}
 
 // Initialize server with data to simulate a database
 var initialize_data = [
@@ -58,7 +62,7 @@ function updateTimes(amount){
 		}
 	}
 }
-// Checks postings if they need to be removed (NOT SURE IF NEEDED)
+// Checks postings if they need to be removed
 function removeExpired(){
 	var limit = new Date().getTime();
 	var i = 0;
@@ -93,7 +97,6 @@ app.post("/update", function (req, res){
 			}
 		}
 	});
-	//console.log(updatedPosts);
 	// Return a JSON object of the available postings
 	res.json(updatedPosts);
 });
@@ -122,34 +125,32 @@ app.post("/add", function (req, res){
 });
 
 app.post("/remove", function (req, res){
-	var results = []
+	var results = [];
 	removeList.forEach(function(e, i, a){
 		results.push(e[0]);
 	});
 	res.json(results);
 });
 
+// When the user submits a new question
 app.post("/question", function(req,res){
 	var message = req.body.message;
 	var tags = req.body.tags.split(" "); // Put tags into array form
 	var ttl = JSON.parse(req.body.ttl);
-	console.log(req.body.ttl + " " + ttl);
 	// Add message to database                 get seconds
 	database.push(posting(new Date().getTime(), ttl * 60, message, tags, []));
 	res.json(0);
 });
 
+// When the user submits an answer to a question
 app.post("/answer", function(req,res){
 	var id = JSON.parse(req.body.id);
 	var message = req.body.message;
-
 	for (var i = 0; i < database.length; i++){
 		if (database[i].id === id){
 			database[i].comments.push(message);
 		}
 	}
-
 	res.json(0);
 });
 
-console.log("Server running on port 3000");

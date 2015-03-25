@@ -1,4 +1,4 @@
-<html>
+<!--<html>
   <head>
     <meta charset='utf-8'>
     <title>QikWik</title>
@@ -19,10 +19,7 @@
 
     
 
-    <center>
-      <div class="newQuestionForm"></div>
-      <div class="messages"></div>
-    </center>
+    
 
 
 
@@ -35,5 +32,60 @@
     <script src="javascript/app.js"></script>
 
   </body>
+
+</html>-->
+
+<html>
+<head>
+  <title>Qik Wik</title>
+  <link href="stylesheets/reset.css" rel="stylesheet" type="text/css">
+  <link href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+  <link href="stylesheets/style.css" rel="stylesheet" type="text/css">
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'> 
+</head>
+
+<body> 
+  <!-- Div for header -->
+  <div id="top-container">
+    
+    <!-- Div for logo -->
+    <div id="title">
+      <img src="stylesheets/images/logo.png" style="display: block; margin-left: auto; margin-right: auto">
+    </div>
+    <br>
+    
+    <!-- menu bar -->
+    <div id="menu">
+      
+         <!-- search bar -->
+      <div id="search"> 
+            <form method="get" action="#">
+            <input type="text" name="q" alt="Search" value="" maxlength="256" size="25" />
+            <input type="submit" name="#" value="Search" />
+            </form>
+        </div>
+        
+         <!-- Ask question button -->
+        <div id="post-question"> 
+          <input class='btn btn-success newQuestion' type='submit' value='New Question'>
+        </div>
+    
+    </div>
+     
+  </div>
+  
+  <!-- Div to hold all questions -->
+  <div id="main">
+    <center>
+      <div class="newQuestionForm"></div>
+      <div class="messages"></div>
+    </center>
+  </div>
+
+  <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+  <script src="javascript/app.js"></script>
+</body>
+
+
 
 </html>

@@ -1,37 +1,46 @@
+// If true, does not call addPosts(). Turns true when viewing a question's comments.
 var blockNewMessages = false;
+// The ID of the question that the user is commenting on
+var commentingOnID = -1;
 
+
+// Loaded when HTML page is loaded
 var main = function () {
-    "use strict";
+	"use strict";
 
-    // Holds all posts that the client can currently see
-    // Element format is {'id': Post ID number, 'message': DOM element <div.message>, 'comments': ["string", ...]}
-    var posts = [];
+	// Holds all posts that the client can currently see
+	// Element format is {'id': Post ID number, 'message': DOM element <div.message>, 'comments': ["string", ...]}
+	var posts = [];
 
-    function sortPosts(){
-    	posts.sort(function(a, b){
-    		if (a.id < b.id) return -1;
-    		return 1;
-    	})
-    }
+	function sortPosts(){
+		posts.sort(function(a, b){
+			if (a.id < b.id) return -1;
+			return 1;
+		});
+	}
 
-    function getPostIDs(){
-    	var contents = [];
-    	posts.forEach(function(element, index, array){
-    		contents.push(element.id);
-    	});
-    	return contents;
-    }
+	function getPostIDs(){
+		var contents = [];
+		posts.forEach(function(element, index, array){
+			contents.push(element.id);
+		});
+		return contents;
+	}
 
-    function msToClock(ms){
-    	var seconds = Math.floor(ms / 1000);
-    	var minutes = Math.floor(seconds / 60);
-    	seconds -= minutes * 60;
-    	if (minutes < 10)
-    		minutes = "0" + minutes;
-    	if (seconds < 10)
-    		seconds = "0" + seconds;
-    	return minutes + ":" + seconds;
-    }
+	function msToClock(ms){
+		var seconds = Math.floor(ms / 1000);
+		var minutes = Math.floor(seconds / 60);
+		var hours = Math.floor(minutes / 60);
+		seconds -= minutes * 60;
+		minutes -= hours * 60;
+		if (hours < 10)
+			hours = "0" + hours;
+		if (minutes < 10)
+			minutes = "0" + minutes;
+		if (seconds < 10)
+			seconds = "0" + seconds;
+		return hours + ":" + minutes + ":" + seconds;
+	}
 
 	function getTime(message){
 		var children = message.children();
@@ -132,6 +141,7 @@ var main = function () {
 					// Go to new page with just this message
 					blockNewMessages = true;
 					post = posts[index];
+					commentingOnID = msgID;
 					
 					// Clear out message queue and only show the one message we are interested in
 					$("div.messages").empty();
@@ -147,7 +157,7 @@ var main = function () {
 						$("div.comment-strings").append($comment);
 					}
 					// Create text area to allow user to reply back
-					var $textarea = $("<textarea rows='5' cols='100' class='answer'>");
+					var $textarea = $("<textarea rows='5' cols='80' class='answer'>");
 					// Button for submitting answer to the server as well as its onClick action
 					var $submitAnswerBtn = $("<input class='btn btn-success submitAnswer' type='submit' value='Post Answer'>");
 					$submitAnswerBtn.on("click", function(){
@@ -175,17 +185,25 @@ var main = function () {
 
 	function removePosts(){
 		$.post("/remove", function(res){
-			res.forEach(function(element, index, array){
-				for (var i = 0; i < posts.length; i++){
-					// If the client still has data of an expired post, remove it
-					if (element.id === posts[i].id){
-						// Find message DOM and delete it
-						$("#" + element.id).remove();
-						break;
+			// If viewing a question's comments
+			if (blockNewMessages){
+				res.forEach(function(element, index, array){
+					// If the question has expired, return to homepage
+					if (element.id === commentingOnID)
+						goToHomePage();
+				});
+			} else {
+				res.forEach(function(element, index, array){
+					for (var i = 0; i < posts.length; i++){
+						// If the client still has data of an expired post, remove it
+						if (element.id === posts[i].id){
+							// Find message DOM and delete it
+							$("#" + element.id).remove();
+							break;
+						}
 					}
-				}
-				
-			});
+				});
+			}
 		});
 	}
 
@@ -201,18 +219,30 @@ var main = function () {
 	//
 	setInterval(updateClient, 100);
 
+	function goToHomePage(){
+		// CLear posts and allow new messages to come in
+		posts = [];
+		blockNewMessages = false;
+		// Delete DOM elements
+		$("div.messages").empty();
+		$("div.newQuestionForm").empty();
+		// Unhide messages
+		$("div.messages").css({display: "block"});
+		// Change Back button to New Question button
+		$("input.newQuestion").removeClass('btn-primary').addClass('btn-success').val('New Question');
+	}
 
 	$("input.newQuestion").on("click", function(){
 		// User is already on the question form; do nothing
 		if ($("input.newQuestion").hasClass('btn-primary'))
 		{
-			// Still need to add clearing method
+			goToHomePage();
 			return;
 		}
 		// Hides the messages
 		$("div.messages").css({display: "none"});
 		// Create DOM elements (textarea, text input, submit button)
-		var $textarea = $("<textarea rows='5' cols='100' class='question'>");
+		var $textarea = $("<textarea rows='5' cols='80' class='question'>");
 		var $tagbox = $("<input class='tagbox' type='text'>");
 		var $numInput = $("<input class='duration' type='number' min='5' max='720' value='5'>");
 
@@ -232,16 +262,14 @@ var main = function () {
 			}
 			// If duration is too long or short
 			if ($("input.duration").val() < 5 || $("input.duration").val() > 720){
-				alert("Messages may only have a duration between 5 and 720 minutes.")
+				alert("Messages may only have a duration between 5 and 720 minutes.");
 				return;
 			}
 
 			// Submit question to server. Upon success, removes question form and returns to posted messages
 			$.post("/question", {'message': $("textarea.question").val(), 'tags': $("input.tagbox").val(), 'ttl': $("input.duration").val()}, function(res){
-				// Clear out the DIV form
-				$("div.newQuestionForm").empty();
-				// Return to the list of messages
-				$("div.messages").css({display: "block"});
+				// Return to home page
+				goToHomePage();
 			});
 		});
 
@@ -249,7 +277,7 @@ var main = function () {
 		$("div.newQuestionForm").append("<h1 class='question'>Ask a Question</h1>", $textarea);
 		$("div.newQuestionForm").append("<br><br><br><br><br><br>Tags: ", $tagbox);
 		$("div.newQuestionForm").append("<br><br>Minutes to Live: ", $numInput);
-		$("div.newQuestionForm").append("<br><br>", $submitQuestionBtn)
+		$("div.newQuestionForm").append("<br><br>", $submitQuestionBtn);
 
 		// Temporarily change the button to a Back button
 		$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
