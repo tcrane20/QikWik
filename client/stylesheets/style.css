@@ -15,7 +15,21 @@ div.messages {
 }
 
 div.post {
-  
+  border: 1px solid #eee;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  padding: 5px;
+  margin-bottom: 15px;
+}
+
+div.post:nth-child(even) {
+  background:lavender;
+}
+
+div.post:nth-child(odd) {
+  background:gainsboro;
 }
 
 div.time {

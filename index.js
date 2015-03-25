@@ -29,18 +29,17 @@ function posting(id, ttl, question, tags, comments){
 
 // Initialize server with data to simulate a database
 var initialize_data = [
-	posting(null, 15, "This is a quick one", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 40, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 50, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 3600, "How do I shot web?", ["lol", "shrekt", "spideymanz"], ["wtf is this gtfo nooob", "Please ask a serious question next time..."]),
-	posting(null, 60, "I'm trying to get my server running via node.js but it's not working. Any pointers?", ["node","server","computer science","programming","web"], []),
-	posting(null, 30, "Quick! I don't know what wire to cut! The red one? Or the blue one? I don't want to dieeeeeeeeeeee!!!", ["important","life or death"], ["It's always the red one", "Yeah, do it faggot!", "OMFG it was the red one! THANK YOU SO MUCH!", "np ;)"])
+	posting(null, 600, "I'm trying to get my server running via node.js but it's not working. Any pointers?", ["node","server","computer science","programming","web"], []),
+	posting(null, 600, "What is meant by a handshaking protocol?", ["computer science", "networking"], ["A protocol uses handshaking if the two communicating entities first exchange control packets before sending data to each other.", "SMTP uses handshaking at the application layer whereas HTTP does not."]),
+	posting(null, 600, "HTTP response messages never have an empty message body. True or False?", ["computer science", "networking", "http"], ["this is false"]),
+	posting(null, 60, "What comes down but never goes up?", ["riddle", "misc"], ["the answer is rain"]),
+	posting(null, 60, "What has a foot but no legs?", ["riddle"], []),
+	posting(null, 3600, "If the answer to life is 42, what is the question?", ["life"], []),
+	posting(null, 1200, "What is your favorite thai restaurant?", ["food", "thai", "restaurant"], []),
+	posting(null, 600, "What information is used by a process running on one host to identify a process running on another host??", ["computer science", "networks"], ["The IP address of the destination host and the port number of the destination socket."]),
+	posting(null, 1200, "Where are cheap places to take a date?", ["relationships", "food", "places"], []),
+	posting(null, 1200, "Which Hawaii island should I go to?", ["travel", "places"], []),
+	posting(null, 1200, "Do you know a good revolving sushi place?", ["food", "sushi"], [])
 ];
 // Database of all messages
 // Add initial data to database
