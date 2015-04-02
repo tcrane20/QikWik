@@ -53,6 +53,7 @@ input.submitQuestion {
 }
 
 textarea.question {
+  resize: none;
   position: relative;
   top: 80px;
 }
@@ -138,6 +139,22 @@ body{
   padding: 15px;  
 }
 
+div.post i{
+  font-style: bold;
+  font-size: 1.5em;
+}
+
+div.post p{
+  font-size: 0.7em;
+  font-style: italic;
+}
+
+div.post .comments{
+  color: blue;
+}
+div.time{
+  font-size: 2em;
+}
 /*
 body {
   background: #f9e933;

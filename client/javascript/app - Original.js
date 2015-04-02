@@ -9,8 +9,8 @@ var main = function () {
 	"use strict";
 
 	// Holds all posts that the client can currently see
-	// Element format is {'message': DOM element <div.message>, 'comments': ["string", ...]}
-	var posts = new Object();
+	// Element format is {'id': Post ID number, 'message': DOM element <div.message>, 'comments': ["string", ...]}
+	var posts = [];
 
 	function sortPosts(){
 		posts.sort(function(a, b){
@@ -20,7 +20,11 @@ var main = function () {
 	}
 
 	function getPostIDs(){
-		return Object.keys(posts);
+		var contents = [];
+		posts.forEach(function(element, index, array){
+			contents.push(element.id);
+		});
+		return contents;
 	}
 
 	function msToClock(ms){
@@ -60,30 +64,36 @@ var main = function () {
 
 	// Updates the timer element on each visible post
 	function updatePosts(){
+		//console.log(getPostIDs());
 		// Send the server the message IDs to get updated data for them (timer and new comments)
 		$.post("/update", {'postids': getPostIDs()}, function(res){
-
 			res.forEach(function(element, index, array){
-				if (posts[element.id] !== undefined){
-					var post = posts[element.id];
-					getTime(post.message).innerHTML = msToClock(element.ttl);
-					// Find comments element in posting and update with new comments (if any)
-					if (post.comments.length !== element.comments.length){
-						// Update to new comments
-						post.comments = element.comments;
-						// If currently viewing the comments section for one question (and not the entire list of questions)
-						if (blockNewMessages){
-							$("div.comment-strings").empty();
-							// Draw the comments
-							for (var j = 0; j < element.comments.length; j++){
-								var $comment = $("<div class='comment-msg'>").text("Answer # " + (j+1) + ": " + element.comments[j]);
-								$("div.comment-strings").append($comment);
+				// CHeck client's posts
+				for (var i = 0; i < posts.length; i++){
+					// If the post has the same ID
+					if (posts[i].id === element.id){
+						// Find timer element in posting and update with new time
+						getTime(posts[i].message).innerHTML = msToClock(element.ttl);
+						// Find comments element in posting and update with new comments (if any)
+						if (posts[i].comments.length !== element.comments.length){
+							// Update to new comments
+							posts[i].comments = element.comments;
+							// If currently viewing the comments section for one question (and not the entire list of questions)
+							if (blockNewMessages){
+								$("div.comment-strings").empty();
+								// Draw the comments
+								for (var j = 0; j < element.comments.length; j++){
+									var $comment = $("<div class='comment-msg'>").text("Answer # " + (j+1) + ": " + element.comments[j]);
+									$("div.comment-strings").append($comment);
+								}
+							}
+							else{
+								
+								// Redraw contents to show new comments total count
+								getComments(posts[index].message).innerHTML = element.comments.length + " Comments";
 							}
 						}
-						else{
-							// Redraw contents to show new comments total count
-							getComments(post.message).innerHTML = element.comments.length + " Comments";
-						}
+						break;
 					}
 				}
 			});
@@ -93,8 +103,7 @@ var main = function () {
 	// Create a new DOM element for each new post
 	function addPosts(){
 		$.post("/add", {'postids': getPostIDs()}, function(res){
-			Object.keys(res).forEach(function(ele, index, array){
-				var element = res[ele];
+			res.forEach(function(element, index, array){
 				// Get question
 				var $post = $("<div>").html("<i>" + element.question + "</i>").attr("id", element.id).addClass("post");
 				// Apply tags
@@ -116,15 +125,23 @@ var main = function () {
 				// Adds the message to the queue
 				$("div.messages").append($post);
 				// Adds this message to the list
-				posts[ele] = {'message': $post, 'comments': element.comments};
+				posts.push({'id': element.id, 'message': $post, 'comments': element.comments});
 				// Allow clicking on the comments element
 				$comments.on("click", function(){
-					var msgID = $(this).parent().attr("id");
-					var post = posts[$(this).parent().attr("id")];
-					var comments = post.comments;
-
+					var msgID = JSON.parse($(this).parent().attr("id"));
+					var comments;
+					var index = 0;
+					var post;
+					// Find the message that is associated with this comment element
+					for (index; index < posts.length; index++){
+						if (posts[index].id === msgID){
+							comments = posts[index].comments;
+							break;
+						}
+					}
 					// Go to new page with just this message
 					blockNewMessages = true;
+					post = posts[index];
 					commentingOnID = msgID;
 					
 					// Clear out message queue and only show the one message we are interested in
@@ -152,10 +169,7 @@ var main = function () {
 						}
 						// Submit answer to server. Upon success, clears out text field
 						$.post("/answer", {'id': msgID, 'message': $("textarea.answer").val()}, function(res){
-							if (res === '-1')
-								alert("Please input more than 12 characters for an answer.");
-							else
-								$("textarea.answer").val('');
+							$("textarea.answer").val('');
 						});
 					});
 					// Append DOM elements for the textarea and submit button
@@ -165,6 +179,7 @@ var main = function () {
 					$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
 				});
 
+				//console.log({'id': element.id, 'message': $post, 'comments': element.comments});
 			});
 		});
 	}
@@ -175,19 +190,19 @@ var main = function () {
 			if (blockNewMessages){
 				res.forEach(function(element, index, array){
 					// If the question has expired, return to homepage
-					if (element === commentingOnID){
-						//goToHomePage();
-						// Set the timer to zero
-						getTime(posts[element].message).innerHTML = msToClock(0);
-						// Disable the button to prevent inputting anymore answers (I don't get why the jQuery is returning an array)
-						$("input.submitAnswer")[0].disabled = true;
-					}
+					if (element.id === commentingOnID)
+						goToHomePage();
 				});
 			} else {
 				res.forEach(function(element, index, array){
-					if (posts[element] !== undefined) {
-						$("#" + element).remove();
-						delete posts[element];
+					for (var i = 0; i < posts.length; i++){
+						// If the client still has data of an expired post, remove it
+						if (element.id === posts[i].id){
+							// Find message DOM and delete it
+							$("#" + element.id).remove();
+
+							break;
+						}
 					}
 				});
 			}
@@ -201,6 +216,7 @@ var main = function () {
 		removePosts();
 		//add new items
 		if (!blockNewMessages) addPosts();
+		//readjust scrollbar
 	}
 	//
 	setInterval(updateClient, 1000);
@@ -218,7 +234,6 @@ var main = function () {
 		$("input.newQuestion").removeClass('btn-primary').addClass('btn-success').val('New Question');
 		// Refresh page
 		window.location.reload();
-		//addPosts();
 	}
 
 	$("input.newQuestion").on("click", function(){
@@ -240,8 +255,8 @@ var main = function () {
 
 		$submitQuestionBtn.on("click", function(){
 			// If textarea does not have enough characters
-			if ($("textarea.question").val().length < 12){
-				alert("Please input at least 12 characters for a question.");
+			if ($("textarea.question").val().length <= 12){
+				alert("Please input more than 12 characters for a question.");
 				return;
 			}
 			// If tag box is empty
@@ -257,12 +272,8 @@ var main = function () {
 
 			// Submit question to server. Upon success, removes question form and returns to posted messages
 			$.post("/question", {'message': $("textarea.question").val(), 'tags': $("input.tagbox").val(), 'ttl': $("input.duration").val()}, function(res){
-				if (res === '-1')
-					alert("Please input at least 12 characters for a question.");
-				else if (res === '-2')
-					alert("Please include at least one tag.");
-				else
-					goToHomePage();
+				// Return to home page
+				goToHomePage();
 			});
 		});
 
@@ -275,9 +286,7 @@ var main = function () {
 		// Temporarily change the button to a Back button
 		$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
 	});
-	
-	// Load the interface with database messages
-	addPosts();
+
 };
 
 $(document).ready(main);
