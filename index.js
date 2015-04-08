@@ -84,10 +84,12 @@ setInterval(removeExpired, 30 * updateSpeed);
 // Client is asking server if any posts have updated
 // Client should send an array of message IDs
 app.post("/update", function (req, res){
+
 	var updatedPosts = [];
 	var postIds = req.body['postids[]'];
 	// If the client has no posts, can't update anything
 	if (typeof postIds === 'undefined'){
+		res.send('0');
 		return;
 	}
 	// For rare case where only one question exists on the client's page, postIds will return
@@ -108,19 +110,73 @@ app.post("/update", function (req, res){
 
 // Client is asking server if any new posts have been added
 app.post("/add", function (req, res){
-	// Make a copy of the database
-	var newPosts = Object.create(database);
+	// 
+	var newPosts = {};
+	var keys = Object.keys(database);
+	// Get client data
 	var postIds = req.body['postids[]'];
-	// If the client has no posts, just send client the entire database
+	var tag = req.body.tag;
+
+	// If the client has no posts
 	if (typeof postIds === 'undefined'){
-		res.json(database);
+		// If requesting a tag, send only messages that have the tag
+		if (tag !== ""){
+			for (var i = 0; i < keys.length; i++){
+				// Get message's tags
+				var tags = database[keys[i]].tags;
+				for (var j = 0; j < tags.length; j++){
+					// Tag is found, add to list and break the loop
+					if (tags[j] === tag){
+						newPosts[keys[i]] = database[keys[i]];
+						break;
+					}
+				}
+			}
+		} else { // No tag, so send the entire database
+			newPosts = database;
+		}
+		// Send the messages
+		res.json(newPosts);
 		return;
 	}
-	// Get array of posting IDs that the client has knowledge of and evaluate it
-	for (var i = 0; i < postIds.length; i++){
-		// Found this ID, so it's not new to the client
-		if (newPosts[i] !== undefined){
-			delete newPosts[i];
+	if (postIds.constructor !== Array) 
+		postIds = [postIds];
+	// If requesting a tag, only get messages that have the tag
+	if (tag !== ""){
+		for (var i = 0; i < keys.length; i++){
+			// Message exists on client side, so skip it
+			var old = false;
+			for (var k = 0; k < postIds.length; k++){
+				// Client already has this message
+				if (postIds[k] === keys[i]){
+					old = true;
+					break;
+				}
+			}
+			if (old) continue;
+			// Check each tag
+			var tags = database[keys[i]].tags;
+			for (var j = 0; j < tags.length; j++){
+				// Found tag, add to list and break from loop
+				if (tags[j] === tag){
+					newPosts[keys[i]] = database[keys[i]];
+					break;
+				}
+			}
+		}
+	} else { // No tag, so check entire database
+		for (var i = 0; i < keys.length; i++){
+			// Message exists on client side, so skip it
+			var old = false;
+			for (var k = 0; k < postIds.length; k++){
+				// Client already has this message
+				if (postIds[k] === keys[i]){
+					old = true;
+					break;
+				}
+			}
+			if (!old)
+				nwePosts[keys[i]] = database[keys[i]];
 		}
 	}
 	// Return remaining posts back to the client
@@ -169,6 +225,9 @@ app.post("/answer", function(req,res){
 		return;
 	}
 	database[id].comments.push(message);
+	if (database[id].ttl < 60000){
+        database[id].ttl= 60000;
+    }
 	res.json(0);
 });
 

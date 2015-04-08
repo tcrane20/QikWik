@@ -10,10 +10,6 @@ h1.answer {
   z-index: 100;
 }
 
-div.messages {
-  
-}
-
 div.post {
   border: 1px solid #eee;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -39,17 +35,6 @@ div.time {
 div.comments {
   cursor: pointer;
   width: 150px;
-}
-
-div.tags {
-
-}
-
-input.newQuestion {
-}
-
-input.submitQuestion {
-  
 }
 
 textarea.question {
@@ -92,31 +77,33 @@ body{
   margin-right:auto;
   margin-top: 0;
   width: 800px;
-  height: 130px;
+  height: 130px;;
   clear:both;
 }
 
 #menu{
   margin-left:auto;
   margin-right:auto;
-  margin-top:40px;
+  margin-top:-20px;
   width: 800px;
   height: 40px;
   clear:both;
 }
 
 #search{
-  float: right;
+  position: absolute;
+  right: 20px;
+  bottom: 0px;
   height: 40px; 
 }
 
 #post-question{
-  float: left;
+  position: absolute;
+  left: 20px;
   height: 40px; 
 }
 
 #main{
-  height:60%; 
   width:800px; 
   overflow:auto;
   position:absolute;
@@ -124,7 +111,6 @@ body{
   top: 250px;
   clear: both;
   margin-left: -415px;
-  z-index: 90;
   background: #fff;
   background-image: url(images/texture4.png);
   background-repeat:repeat-x repeat-y;
@@ -154,6 +140,14 @@ div.post .comments{
 }
 div.time{
   font-size: 2em;
+}
+
+#SText{
+  color: black;
+}
+
+#SButton{
+  color: black;
 }
 /*
 body {

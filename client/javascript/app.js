@@ -2,6 +2,8 @@
 var blockNewMessages = false;
 // The ID of the question that the user is commenting on
 var commentingOnID = -1;
+// Filter messages based on searched tag
+var tagFilter = "";
 
 
 // Loaded when HTML page is loaded
@@ -62,11 +64,18 @@ var main = function () {
 	function updatePosts(){
 		// Send the server the message IDs to get updated data for them (timer and new comments)
 		$.post("/update", {'postids': getPostIDs()}, function(res){
-
+			if (res === '0') return;
 			res.forEach(function(element, index, array){
 				if (posts[element.id] !== undefined){
 					var post = posts[element.id];
 					getTime(post.message).innerHTML = msToClock(element.ttl);
+
+					//////TESTING
+					if (element.ttl < 60000){
+						$(getTime(post.message)).css("color", "red");
+						$(getTime(post.message)).trigger("startRumble");
+					}
+
 					// Find comments element in posting and update with new comments (if any)
 					if (post.comments.length !== element.comments.length){
 						// Update to new comments
@@ -92,22 +101,28 @@ var main = function () {
 
 	// Create a new DOM element for each new post
 	function addPosts(){
-		$.post("/add", {'postids': getPostIDs()}, function(res){
+		$.post("/add", {'postids': getPostIDs(), 'tag': tagFilter}, function(res){
 			Object.keys(res).forEach(function(ele, index, array){
 				var element = res[ele];
 				// Get question
 				var $post = $("<div>").html("<i>" + element.question + "</i>").attr("id", element.id).addClass("post");
 				// Apply tags
-				var tagstr = "Tags: ";
+				var $tags = $("<p>").text("Tags: ");
 				element.tags.forEach(function(e, i, a){
-					if (i === 0)
-						tagstr += e;
-					else
-						tagstr += ", " + e;
+					var $tagbutton = $("<button>").text(e).on("click", function(){
+						tagFilter = e;
+   						goToHomePage();
+					});
+					$tags.append($tagbutton);
 				});
-				var $tags = $("<p>").text(tagstr);
-				// Display timer
+				
+				// Display timer and give rumble properties
 				var $ttl = $("<div>").text(msToClock(element.ttl)).addClass("time");
+				$ttl.jrumble({
+					x: 3,
+					y: 3,
+					rotation: 2
+				});
 				// Indicate number of comments made to the question
 				var $comments = $("<div>").text(element.comments.length + " Comments").addClass("comments");
 				
@@ -130,6 +145,12 @@ var main = function () {
 					// Clear out message queue and only show the one message we are interested in
 					$("div.messages").empty();
 					$("div.messages").append(post.message);
+
+					//JRUMBLE TEST
+					$(getTime(post.message)).jrumble();
+					$(getTime(post.message)).trigger("stopRumble");
+
+
 					// Also, create a new div that will hold all the comment messages and text field for submitting answers
 					$("div.messages").append($("<div class='comment-strings'>"));
 					$("div.messages").append($("<div class='answer-field'>"));
@@ -174,19 +195,22 @@ var main = function () {
 			// If viewing a question's comments
 			if (blockNewMessages){
 				res.forEach(function(element, index, array){
-					// If the question has expired, return to homepage
+					// If the question has expired, remove timer and disable sending answers
 					if (element === commentingOnID){
-						//goToHomePage();
-						// Set the timer to zero
-						getTime(posts[element].message).innerHTML = msToClock(0);
+						// Remove timer DOM
+						$("div.time").remove();
 						// Disable the button to prevent inputting anymore answers (I don't get why the jQuery is returning an array)
 						$("input.submitAnswer")[0].disabled = true;
 					}
 				});
-			} else {
+			} else { // Home page
 				res.forEach(function(element, index, array){
+					// Explode the DOM element and delete it when finished
 					if (posts[element] !== undefined) {
-						$("#" + element).remove();
+						$("#" + element).hide("explode", {complete: function(){
+							$("#" + element).remove();
+						}});
+						// Remove post from client's list
 						delete posts[element];
 					}
 				});
@@ -217,8 +241,8 @@ var main = function () {
 		// Change Back button to New Question button
 		$("input.newQuestion").removeClass('btn-primary').addClass('btn-success').val('New Question');
 		// Refresh page
-		window.location.reload();
-		//addPosts();
+		addPosts();
+		updatePosts();
 	}
 
 	$("input.newQuestion").on("click", function(){
@@ -276,8 +300,16 @@ var main = function () {
 		$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
 	});
 	
+	// Search button is clicked
+	$("#SButton").click(function(event){
+		event.preventDefault();
+        tagFilter = $("#SText").val();
+        goToHomePage();
+	});
+
 	// Load the interface with database messages
 	addPosts();
+	updatePosts();
 };
 
 $(document).ready(main);
