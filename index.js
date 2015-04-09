@@ -1,7 +1,7 @@
 // Initial setup for server
-var http = require('http'),
-	express = require('express'),
-	bodyParser = require('body-parser'),
+var http = require("http"),
+	express = require("express"),
+	bodyParser = require("body-parser"),
 	app = express(),
 	updateSpeed = 1000; // Calls the main update function this many milliseconds
 
@@ -26,6 +26,7 @@ var removeList = new Object();
 
 // Creates a JSON object for each post
 function posting(id, ttl, question, tags, comments){
+	"use strict";
 	// If no time stamp assigned to message, assign default ID (for initializing the server with data)
 	if (id === null){
 		id = temp_id;
@@ -33,7 +34,7 @@ function posting(id, ttl, question, tags, comments){
 		
 	}
 	id = id.toString();
-	database[id] = {'id': id, "ttl": ttl * 1000, "question": question, "tags": tags, "comments": comments};
+	database[id] = {"id": id, "ttl": ttl * 1000, "question": question, "tags": tags, "comments": comments};
 }
 
 // Initialize server with data to simulate a database
@@ -54,6 +55,7 @@ posting(null, 600, "Do you know a good revolving sushi place?", ["food", "sushi"
 
 // A function that is called constantly by the server to reduce the postings' times by 'amount'
 function updateTimes(amount){
+	"use strict";
 	Object.keys(database).forEach(function(e,i,a){
 		post = database[e];
 		post.ttl -= amount;
@@ -66,6 +68,7 @@ function updateTimes(amount){
 }
 // Checks postings if they need to be removed
 function removeExpired(){
+	"use strict";
 	var limit = new Date().getTime();
 	Object.keys(removeList).forEach(function(e,i,a){
 		if (limit - removeList[e] > 30 * updateSpeed){
@@ -76,7 +79,7 @@ function removeExpired(){
 
 // Call the function "updateDatabase" every X milliseconds
 setInterval(function(){
-	updateTimes(updateSpeed)
+	updateTimes(updateSpeed);
 }, updateSpeed);
 // Clean up removeList so that it doesn't get backed up
 setInterval(removeExpired, 30 * updateSpeed);
@@ -84,12 +87,12 @@ setInterval(removeExpired, 30 * updateSpeed);
 // Client is asking server if any posts have updated
 // Client should send an array of message IDs
 app.post("/update", function (req, res){
-
+	"use strict";
 	var updatedPosts = [];
-	var postIds = req.body['postids[]'];
+	var postIds = req.body["postids[]"];
 	// If the client has no posts, can't update anything
-	if (typeof postIds === 'undefined'){
-		res.send('0');
+	if (typeof postIds === "undefined"){
+		res.send("0");
 		return;
 	}
 	// For rare case where only one question exists on the client's page, postIds will return
@@ -110,15 +113,15 @@ app.post("/update", function (req, res){
 
 // Client is asking server if any new posts have been added
 app.post("/add", function (req, res){
-	// 
+	"use strict";
 	var newPosts = {};
 	var keys = Object.keys(database);
 	// Get client data
-	var postIds = req.body['postids[]'];
+	var postIds = req.body["postids[]"];
 	var tag = req.body.tag;
 
 	// If the client has no posts
-	if (typeof postIds === 'undefined'){
+	if (typeof postIds === "undefined"){
 		// If requesting a tag, send only messages that have the tag
 		if (tag !== ""){
 			for (var i = 0; i < keys.length; i++){
@@ -176,7 +179,7 @@ app.post("/add", function (req, res){
 				}
 			}
 			if (!old)
-				nwePosts[keys[i]] = database[keys[i]];
+				newPosts[keys[i]] = database[keys[i]];
 		}
 	}
 	// Return remaining posts back to the client
@@ -186,6 +189,7 @@ app.post("/add", function (req, res){
 // Client is asking server if any posts have expired
 // Returns array of message IDs that have expired
 app.post("/remove", function (req, res){
+	"use strict";
 	var results = [];
 	// Get message IDs and put them in array
 	Object.keys(removeList).forEach(function(e, i, a){
@@ -196,15 +200,16 @@ app.post("/remove", function (req, res){
 
 // When the user submits a new question
 app.post("/question", function(req,res){
+	"use strict";
 	var message = req.body.message;
 	// Check that message is 12 characters
-	if (message === 'undefined' || message.length < 12){
+	if (message === "undefined" || message.length < 12){
 		res.json(-1);
 		return;
 	}
 	var tags = req.body.tags;
 	// Check that there is at least one tag
-	if (tags === 'undefined'){
+	if (tags === "undefined"){
 		res.json(-2);
 		return;
 	}
@@ -217,17 +222,18 @@ app.post("/question", function(req,res){
 
 // When the user submits an answer to a question
 app.post("/answer", function(req,res){
+	"use strict";
 	var id = JSON.parse(req.body.id);
 	var message = req.body.message;
 	// Check if answer is long enough
-	if (message === 'undefined' || message.length < 12){
+	if (message === "undefined" || message.length < 12){
 		res.json(-1);
 		return;
 	}
 	database[id].comments.push(message);
 	if (database[id].ttl < 60000){
-        database[id].ttl = 60000;
-    }
+		database[id].ttl = 60000;
+	}
 	res.json(0);
 });
 

@@ -11,7 +11,7 @@ var main = function () {
 	"use strict";
 
 	// Holds all posts that the client can currently see
-	// Element format is {'message': DOM element <div.message>, 'comments': ["string", ...]}
+	// Element format is {"message": DOM element <div.message>, "comments": ["string", ...]}
 	var posts = new Object();
 
 	function getPostIDs(){
@@ -24,12 +24,15 @@ var main = function () {
 		var hours = Math.floor(minutes / 60);
 		seconds -= minutes * 60;
 		minutes -= hours * 60;
-		if (hours < 10)
+		if (hours < 10){
 			hours = "0" + hours;
-		if (minutes < 10)
+		}
+		if (minutes < 10){
 			minutes = "0" + minutes;
-		if (seconds < 10)
+		}
+		if (seconds < 10){
 			seconds = "0" + seconds;
+		}
 		return hours + ":" + minutes + ":" + seconds;
 	}
 
@@ -56,14 +59,14 @@ var main = function () {
 	// Updates the timer element on each visible post
 	function updatePosts(){
 		// Send the server the message IDs to get updated data for them (timer and new comments)
-		$.post("/update", {'postids': getPostIDs()}, function(res){
-			if (res === '0') return;
+		$.post("/update", {"postids": getPostIDs()}, function(res){
+			if (res === "0") return;
 			res.forEach(function(element, index, array){
 				if (posts[element.id] !== undefined){
 					var post = posts[element.id];
 					getTime(post.message).innerHTML = msToClock(element.ttl);
 
-					//////TESTING
+					// Set red text and shaking
 					if (element.ttl < 60000){
 						$(getTime(post.message)).css("color", "red");
 						$(getTime(post.message)).trigger("startRumble");
@@ -78,7 +81,8 @@ var main = function () {
 							$("div.comment-strings").empty();
 							// Draw the comments
 							for (var j = 0; j < element.comments.length; j++){
-								var $comment = $("<div class='comment-msg'>").text("Answer # " + (j+1) + ": " + element.comments[j]);
+								var $comment = $("<div class="comment-msg">");
+								$comment.text("Answer # " + (j+1) + ": " + element.comments[j]);
 								$("div.comment-strings").append($comment);
 							}
 						}
@@ -94,7 +98,7 @@ var main = function () {
 
 	// Create a new DOM element for each new post
 	function addPosts(){
-		$.post("/add", {'postids': getPostIDs(), 'tag': tagFilter}, function(res){
+		$.post("/add", {"postids": getPostIDs(), "tag": tagFilter}, function(res){
 			Object.keys(res).forEach(function(ele, index, array){
 				var element = res[ele];
 				// Get question
@@ -104,7 +108,7 @@ var main = function () {
 				element.tags.forEach(function(e, i, a){
 					var $tagbutton = $("<button>").text(e).on("click", function(){
 						tagFilter = e;
-   						goToHomePage();
+						goToHomePage();
 					});
 					$tags.append($tagbutton);
 				});
@@ -124,7 +128,7 @@ var main = function () {
 				// Adds the message to the queue
 				$("div.messages").append($post);
 				// Adds this message to the list
-				posts[ele] = {'message': $post, 'comments': element.comments};
+				posts[ele] = {"message": $post, "comments": element.comments};
 				// Allow clicking on the comments element
 				$comments.on("click", function(){
 					var msgID = $(this).parent().attr("id");
@@ -145,19 +149,19 @@ var main = function () {
 
 
 					// Also, create a new div that will hold all the comment messages and text field for submitting answers
-					$("div.messages").append($("<div class='comment-strings'>"));
-					$("div.messages").append($("<div class='answer-field'>"));
+					$("div.messages").append($("<div class="comment-strings">"));
+					$("div.messages").append($("<div class="answer-field">"));
 					// Hide the div.comments as we don't need it right now
 					$("div.comments").css({display: "none"});
 					// Draw the comments
 					for (index = 0; index < post.comments.length; index++){
-						var $comment = $("<div class='comment-msg'>").text("Answer # " + (index+1) + ": " + post.comments[index]);
+						var $comment = $("<div class="comment-msg">").text("Answer # " + (index+1) + ": " + post.comments[index]);
 						$("div.comment-strings").append($comment);
 					}
 					// Create text area to allow user to reply back
-					var $textarea = $("<textarea rows='5' cols='80' class='answer'>");
+					var $textarea = $("<textarea rows="5" cols="80" class="answer">");
 					// Button for submitting answer to the server as well as its onClick action
-					var $submitAnswerBtn = $("<input class='btn btn-success submitAnswer' type='submit' value='Post Answer'>");
+					var $submitAnswerBtn = $("<input class="btn btn-success submitAnswer" type="submit" value="Post Answer">");
 					$submitAnswerBtn.on("click", function(){
 						// If textarea does not have enough characters
 						if ($("textarea.answer").val().length <= 12){
@@ -165,18 +169,18 @@ var main = function () {
 							return;
 						}
 						// Submit answer to server. Upon success, clears out text field
-						$.post("/answer", {'id': msgID, 'message': $("textarea.answer").val()}, function(res){
-							if (res === '-1')
+						$.post("/answer", {"id": msgID, "message": $("textarea.answer").val()}, function(res){
+							if (res === "-1")
 								alert("Please input more than 12 characters for an answer.");
 							else
-								$("textarea.answer").val('');
+								$("textarea.answer").val("");
 						});
 					});
 					// Append DOM elements for the textarea and submit button
-					$("div.answer-field").append("<h1 class='answer'>Reply to Question</h1>", $textarea, "<br><br>", $submitAnswerBtn);
+					$("div.answer-field").append("<h1 class="answer">Reply to Question</h1>", $textarea, "<br><br>", $submitAnswerBtn);
 
 					// Temporarily change the button to a Back button
-					$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
+					$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val("Back");
 				});
 
 			});
@@ -232,7 +236,7 @@ var main = function () {
 		// Unhide messages
 		$("div.messages").css({display: "block"});
 		// Change Back button to New Question button
-		$("input.newQuestion").removeClass('btn-primary').addClass('btn-success').val('New Question');
+		$("input.newQuestion").removeClass("btn-primary").addClass("btn-success").val("New Question");
 		// Refresh page
 		addPosts();
 		updatePosts();
@@ -240,7 +244,7 @@ var main = function () {
 
 	$("input.newQuestion").on("click", function(){
 		// User is already on the question form; do nothing
-		if ($("input.newQuestion").hasClass('btn-primary'))
+		if ($("input.newQuestion").hasClass("btn-primary"))
 		{
 			goToHomePage();
 			return;
@@ -248,12 +252,12 @@ var main = function () {
 		// Hides the messages
 		$("div.messages").css({display: "none"});
 		// Create DOM elements (textarea, text input, submit button)
-		var $textarea = $("<textarea rows='5' cols='80' class='question'>");
-		var $tagbox = $("<input class='tagbox' type='text'>");
-		var $numInput = $("<input class='duration' type='number' min='5' max='720' value='5'>");
+		var $textarea = $("<textarea rows="5" cols="80" class="question">");
+		var $tagbox = $("<input class="tagbox" type="text">");
+		var $numInput = $("<input class="duration" type="number" min="5" max="720" value="5">");
 
 		// Button for submitting question to the server as well as its onClick action
-		var $submitQuestionBtn = $("<input class='btn btn-success submitQuestion' type='submit' value='Post Question'>");
+		var $submitQuestionBtn = $("<input class="btn btn-success submitQuestion" type="submit" value="Post Question">");
 
 		$submitQuestionBtn.on("click", function(){
 			// If textarea does not have enough characters
@@ -273,10 +277,10 @@ var main = function () {
 			}
 
 			// Submit question to server. Upon success, removes question form and returns to posted messages
-			$.post("/question", {'message': $("textarea.question").val(), 'tags': $("input.tagbox").val(), 'ttl': $("input.duration").val()}, function(res){
-				if (res === '-1')
+			$.post("/question", {"message": $("textarea.question").val(), "tags": $("input.tagbox").val(), "ttl": $("input.duration").val()}, function(res){
+				if (res === "-1")
 					alert("Please input at least 12 characters for a question.");
-				else if (res === '-2')
+				else if (res === "-2")
 					alert("Please include at least one tag.");
 				else
 					goToHomePage();
@@ -284,20 +288,20 @@ var main = function () {
 		});
 
 		// Append DOMs
-		$("div.newQuestionForm").append("<h1 class='question'>Ask a Question</h1>", $textarea);
+		$("div.newQuestionForm").append("<h1 class="question">Ask a Question</h1>", $textarea);
 		$("div.newQuestionForm").append("<br><br><br><br><br><br>Tags: ", $tagbox);
 		$("div.newQuestionForm").append("<br><br>Minutes to Live: ", $numInput);
 		$("div.newQuestionForm").append("<br><br>", $submitQuestionBtn);
 
 		// Temporarily change the button to a Back button
-		$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val('Back');
+		$("input.newQuestion").removeClass("btn-success").addClass("btn-primary").val("Back");
 	});
 	
 	// Search button is clicked
 	$("#SButton").click(function(event){
 		event.preventDefault();
-        tagFilter = $("#SText").val();
-        goToHomePage();
+		tagFilter = $("#SText").val();
+		goToHomePage();
 	});
 
 	$("#help").click(function(event){
