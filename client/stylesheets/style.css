@@ -149,6 +149,10 @@ div.time{
 #SButton{
   color: black;
 }
+
+#help{
+  position: absolute;
+}
 /*
 body {
   background: #f9e933;

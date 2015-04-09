@@ -226,7 +226,7 @@ app.post("/answer", function(req,res){
 	}
 	database[id].comments.push(message);
 	if (database[id].ttl < 60000){
-        database[id].ttl= 60000;
+        database[id].ttl = 60000;
     }
 	res.json(0);
 });

@@ -14,13 +14,6 @@ var main = function () {
 	// Element format is {'message': DOM element <div.message>, 'comments': ["string", ...]}
 	var posts = new Object();
 
-	function sortPosts(){
-		posts.sort(function(a, b){
-			if (a.id < b.id) return -1;
-			return 1;
-		});
-	}
-
 	function getPostIDs(){
 		return Object.keys(posts);
 	}
@@ -305,6 +298,10 @@ var main = function () {
 		event.preventDefault();
         tagFilter = $("#SText").val();
         goToHomePage();
+	});
+
+	$("#help").click(function(event){
+		window.location.href = "QikWik.pdf";
 	});
 
 	// Load the interface with database messages
