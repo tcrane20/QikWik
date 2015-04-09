@@ -57,7 +57,7 @@ posting(null, 600, "Do you know a good revolving sushi place?", ["food", "sushi"
 function updateTimes(amount){
 	"use strict";
 	Object.keys(database).forEach(function(e,i,a){
-		post = database[e];
+		var post = database[e];
 		post.ttl -= amount;
 
 		if (post.ttl <= 0){
